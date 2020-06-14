@@ -4,22 +4,20 @@ import (
 	"goim/model"
 
 	"github.com/gorilla/websocket"
-	uuid "github.com/satori/go.uuid"
 )
 
 // Client model
 type Client struct {
-	id     string
-	socket *websocket.Conn
-	Send   chan model.Message
+	UserName string
+	socket   *websocket.Conn
+	Send     chan model.Message
 }
 
-func NewClient(conn *websocket.Conn) (c *Client) {
-	uid, _ := uuid.NewV4()
+func NewClient(conn *websocket.Conn, name string) (c *Client) {
 	c = &Client{
-		id:     uid.String(),
-		socket: conn,
-		Send:   make(chan model.Message),
+		UserName: name,
+		socket:   conn,
+		Send:     make(chan model.Message),
 	}
 	return
 }

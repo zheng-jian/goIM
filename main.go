@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"goIM/server"
+	"goim/model"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -34,7 +35,14 @@ func wsPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	client := server.NewClient(conn)
+	var msg *model.Message
+	err := conn.ReadJSON(&msg)
+	if err != nil {
+		fmt.Println("login in error")
+		return
+	}
+
+	client := server.NewClient(conn, msg.Username)
 
 	manager.Register <- client
 
