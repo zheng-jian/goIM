@@ -2,7 +2,7 @@ package model
 
 //Message struct
 type Message struct {
-	Sender  string `json:"sender,omitempty"`
-	Reciver string `json:"receiver,omitempty"`
-	Content string `json:"content,omitempty"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Message  string `json:"message"`
 }

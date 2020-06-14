@@ -1,21 +1,20 @@
 package server
 
 import (
-	"encoding/json"
 	"goim/model"
 )
 
 //ClientManager struct
 type ClientManager struct {
 	Clients    map[*Client]bool
-	Broadcast  chan []byte
+	Broadcast  chan model.Message
 	Register   chan *Client
 	Unregister chan *Client
 }
 
 func NewClientManager() (manager *ClientManager) {
 	manager = &ClientManager{
-		Broadcast:  make(chan []byte),
+		Broadcast:  make(chan model.Message),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Clients:    make(map[*Client]bool),
@@ -28,15 +27,15 @@ func (manager *ClientManager) Start() {
 		select {
 		case conn := <-manager.Register:
 			manager.Clients[conn] = true
-			jsonMessage, _ := json.Marshal(&model.Message{Content: "/A new socket has connected."})
-			manager.send(jsonMessage, conn)
+			message := &model.Message{Message: "A new client has connected."}
+			manager.send(*message, conn)
 
 		case conn := <-manager.Unregister:
 			if _, ok := manager.Clients[conn]; ok {
 				close(conn.Send)
 				delete(manager.Clients, conn)
-				jsonMessage, _ := json.Marshal(&model.Message{Content: "/A socket has disconnected."})
-				manager.send(jsonMessage, conn)
+				message := &model.Message{Message: "A client has disconnected."}
+				manager.send(*message, conn)
 			}
 		case message := <-manager.Broadcast:
 			for conn := range manager.Clients {
@@ -51,10 +50,10 @@ func (manager *ClientManager) Start() {
 	}
 }
 
-func (manager *ClientManager) send(message []byte, ignore *Client) {
+func (manager *ClientManager) send(message model.Message, ignore *Client) {
 	for conn := range manager.Clients {
-		if conn != ignore {
-			conn.Send <- message
-		}
+		//if conn != ignore {
+		conn.Send <- message
+		//}
 	}
 }

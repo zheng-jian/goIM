@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"goim/model"
 
 	"github.com/gorilla/websocket"
@@ -12,7 +11,7 @@ import (
 type Client struct {
 	id     string
 	socket *websocket.Conn
-	Send   chan []byte
+	Send   chan model.Message
 }
 
 func NewClient(conn *websocket.Conn) (c *Client) {
@@ -20,7 +19,7 @@ func NewClient(conn *websocket.Conn) (c *Client) {
 	c = &Client{
 		id:     uid.String(),
 		socket: conn,
-		Send:   make(chan []byte),
+		Send:   make(chan model.Message),
 	}
 	return
 }
@@ -32,14 +31,15 @@ func (c *Client) Read(clientManager *ClientManager) {
 	}()
 
 	for {
-		_, message, err := c.socket.ReadMessage()
+		var msg model.Message
+		err := c.socket.ReadJSON(&msg)
 		if err != nil {
 			clientManager.Unregister <- c
 			c.socket.Close()
 			break
 		}
-		jsonMessage, _ := json.Marshal(&model.Message{Sender: c.id, Content: string(message)})
-		clientManager.Broadcast <- jsonMessage
+		//jsonMessage, _ := json.Marshal(&model.Message{Email: c.Message.Email, Content: string(message)})
+		clientManager.Broadcast <- msg
 	}
 }
 
@@ -56,7 +56,7 @@ func (c *Client) Write() {
 				return
 			}
 
-			c.socket.WriteMessage(websocket.TextMessage, message)
+			c.socket.WriteJSON(message)
 		}
 	}
 }

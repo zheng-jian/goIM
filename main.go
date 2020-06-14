@@ -9,19 +9,26 @@ import (
 )
 
 var (
-	manager = server.NewClientManager()
+	manager  = server.NewClientManager()
+	upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
 )
 
 func main() {
 	fmt.Println("Starting application...")
-	manager := server.NewClientManager()
+	fs := http.FileServer(http.Dir("."))
+	http.Handle("/", fs)
+
 	go manager.Start()
 	http.HandleFunc("/ws", wsPage)
-	http.ListenAndServe(":12345", nil)
+	http.ListenAndServe(":8080", nil)
 }
 
 func wsPage(res http.ResponseWriter, req *http.Request) {
-	conn, error := (&websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}).Upgrade(res, req, nil)
+	conn, error := upgrader.Upgrade(res, req, nil)
 	if error != nil {
 		http.NotFound(res, req)
 		return
