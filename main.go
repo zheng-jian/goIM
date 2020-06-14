@@ -6,6 +6,7 @@ import (
 	"goim/model"
 	"net/http"
 
+	"github.com/go-redis/redis"
 	"github.com/gorilla/websocket"
 )
 
@@ -20,10 +21,22 @@ var (
 
 func main() {
 	fmt.Println("Starting application...")
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+	// check redis connection
+	fmt.Println("connect redis")
+	pong, err := client.Ping().Result()
+	fmt.Println(pong, err)
+
+	fmt.Println("Starting IM server")
 	fs := http.FileServer(http.Dir("."))
 	http.Handle("/", fs)
 
 	go manager.Start()
+	fmt.Println("Starting Websocket server")
 	http.HandleFunc("/ws", wsPage)
 	http.ListenAndServe(":8080", nil)
 }
